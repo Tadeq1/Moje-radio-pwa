@@ -1,0 +1,747 @@
+
+<style>
+@media (min-width: 900px){
+  body{max-width:1400px;margin:0 auto;padding:24px}
+  .pc-dashboard{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(360px,.85fr);gap:22px;align-items:start}
+  .pc-left,.pc-right{min-width:0;display:flex;flex-direction:column;gap:18px}
+  .pc-left .card,.pc-right .card{margin-bottom:0}
+  .hero{padding:26px 30px;min-height:178px;position:relative}
+  .hero h1,.hero p,.hero .live-datetime{padding-right:235px}
+  .round-clock{
+    position:absolute;right:30px;top:50%;transform:translateY(-50%);
+    width:150px;height:150px;border-radius:50%;border:5px solid rgba(255,255,255,.9);
+    display:block;box-sizing:border-box;background:rgba(11,18,32,.72);
+    box-shadow:0 10px 30px rgba(0,0,0,.25), inset 0 0 0 2px rgba(255,255,255,.08);
+  }
+  .round-clock .tick{position:absolute;left:50%;top:7px;width:2px;height:8px;background:rgba(255,255,255,.72);transform-origin:50% 68px}
+  .round-clock .tick:nth-child(1){transform:translateX(-50%) rotate(0deg)}
+  .round-clock .tick:nth-child(2){transform:translateX(-50%) rotate(30deg)}
+  .round-clock .tick:nth-child(3){transform:translateX(-50%) rotate(60deg)}
+  .round-clock .tick:nth-child(4){transform:translateX(-50%) rotate(90deg)}
+  .round-clock .tick:nth-child(5){transform:translateX(-50%) rotate(120deg)}
+  .round-clock .tick:nth-child(6){transform:translateX(-50%) rotate(150deg)}
+  .round-clock .tick:nth-child(7){transform:translateX(-50%) rotate(180deg)}
+  .round-clock .tick:nth-child(8){transform:translateX(-50%) rotate(210deg)}
+  .round-clock .tick:nth-child(9){transform:translateX(-50%) rotate(240deg)}
+  .round-clock .tick:nth-child(10){transform:translateX(-50%) rotate(270deg)}
+  .round-clock .tick:nth-child(11){transform:translateX(-50%) rotate(300deg)}
+  .round-clock .tick:nth-child(12){transform:translateX(-50%) rotate(330deg)}
+  .clock-hand{position:absolute;left:50%;top:50%;transform-origin:50% 100%;border-radius:99px;z-index:3}
+  .clock-hour{width:5px;height:36px;background:#fff;transform:translate(-50%,-100%) rotate(0deg)}
+  .clock-minute{width:3px;height:50px;background:#cbd5e1;transform:translate(-50%,-100%) rotate(0deg)}
+  .clock-second{width:2px;height:56px;background:#60a5fa;transform:translate(-50%,-100%) rotate(0deg)}
+  .clock-center{position:absolute;left:50%;top:50%;width:9px;height:9px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);z-index:4}
+  .round-clock .time{position:absolute;left:0;right:0;top:61%;text-align:center;font-size:1.05rem;font-weight:900;letter-spacing:.04em;color:#fff;z-index:5}
+  .round-clock .date{position:absolute;left:0;right:0;top:77%;text-align:center;font-size:.66rem;color:#cbd5e1;z-index:5}
+}
+@media (max-width:899px){.round-clock{display:none}}
+</style>
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0b1220">
+  <title>Kalkulator Zlecenia</title>
+  <meta name="description" content="Kalkulator zleceń produkcyjnych i zmian A/B/C.">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <meta name="description" content="Kalkulator zleceń produkcyjnych i zmian A/B/C.">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <style>
+    :root{
+      --bg:#eef2f7; --card:#ffffff; --text:#172033; --muted:#687386;
+      --primary:#2563eb; --primary2:#1d4ed8; --border:#dce2ea;
+      --success:#16a34a; --warning:#f59e0b; --shadow:0 12px 35px rgba(23,32,51,.09);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:linear-gradient(145deg,#eaf0f8,#f8fafc);color:var(--text)}
+    body{padding:18px 12px}
+    .container{max-width:1360px;margin:auto}
+    .hero{background:linear-gradient(135deg,#0b1220,#182844);color:#fff;border-radius:24px;padding:22px 20px;box-shadow:var(--shadow);margin-bottom:14px;position:relative;overflow:hidden}
+    .hero:after{content:"";position:absolute;width:150px;height:150px;border-radius:50%;right:-55px;top:-65px;background:rgba(37,99,235,.25)}
+    .eyebrow{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;opacity:.65;font-weight:700}
+    .live-datetime{margin-top:15px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+    .live-datetime strong{font-size:2rem;letter-spacing:.03em;line-height:1}
+    .live-datetime span{font-size:.82rem;color:#cbd5e1}
+    h1{font-size:1.65rem;margin:5px 0 4px}
+    .subtitle{margin:0;color:#cbd5e1;font-size:.92rem}
+    .card{background:var(--card);border:1px solid rgba(220,226,234,.8);border-radius:20px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+    .card-title{display:flex;align-items:center;gap:9px;font-weight:800;font-size:1.02rem;margin-bottom:13px}
+    .icon{width:34px;height:34px;border-radius:10px;background:#eaf1ff;color:var(--primary);display:grid;place-items:center;font-size:1.05rem}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.calc-box{padding:13px;border:1px solid var(--border);border-radius:14px;background:#fbfcfe}
+    .field{margin-bottom:11px}
+    label{display:block;font-size:.78rem;color:var(--muted);font-weight:700;margin:0 0 6px 2px}
+    input,button{width:100%;font:inherit;border-radius:12px}
+    input{padding:12px 13px;border:1px solid var(--border);background:#fbfcfe;color:var(--text);outline:none;transition:.2s}
+    input:focus{border-color:#7aa2f7;box-shadow:0 0 0 4px rgba(37,99,235,.10);background:#fff}
+    button{padding:13px 14px;border:0;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;font-weight:800;cursor:pointer;box-shadow:0 7px 16px rgba(37,99,235,.22);margin-top:2px}
+    button:active{transform:translateY(1px)}
+    .result{margin-top:12px;padding:14px;border-radius:14px;background:#f4f7fb;border:1px solid var(--border);line-height:1.65}
+    .result:empty{display:none}
+    .current{background:linear-gradient(135deg,#f7faff,#edf4ff);border-color:#cfe0ff;transition:background .4s ease,border-color .4s ease}
+    body.shift-a-theme{--primary:#16a34a;--primary2:#15803d}
+    body.shift-b-theme{--primary:#2563eb;--primary2:#1d4ed8}
+    body.shift-c-theme{--primary:#d97706;--primary2:#b45309}
+    body.shift-a-theme .current{background:linear-gradient(135deg,#f3fcf6,#eaf8ef);border-color:#b7e3c4}
+    body.shift-b-theme .current{background:linear-gradient(135deg,#f7faff,#edf4ff);border-color:#cfe0ff}
+    body.shift-c-theme .current{background:linear-gradient(135deg,#fffaf0,#fff5dc);border-color:#f4d38a}
+    .shift{padding:6px 10px;border-radius:999px;display:inline-block;font-weight:800}
+    .shift-a{background:#dcfce7;color:#166534}.shift-b{background:#dbeafe;color:#1e40af}.shift-c{background:#fef3c7;color:#92400e}
+    .live{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:7px;box-shadow:0 0 0 4px rgba(34,197,94,.12)}
+    .hint{font-size:.78rem;color:var(--muted);margin-top:8px}
+    .progress-wrap{margin:4px 0 13px;padding:12px 13px;border:1px solid var(--border);border-radius:14px;background:#fbfcfe}
+    .progress-head,.progress-meta{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .progress-head{font-size:.82rem;font-weight:800}.progress-head strong{color:var(--primary)}
+    .progress-track{height:11px;background:#e7ebf1;border-radius:99px;overflow:hidden;margin:8px 0 6px}
+    .progress-bar{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#2563eb,#60a5fa);transition:width .3s ease}
+    .progress-meta{font-size:.72rem;color:var(--muted)}
+    .countdown{margin-top:10px;padding:13px;border-radius:14px;background:#0b1220;color:#fff;text-align:center;font-weight:800}
+    .countdown small{display:block;color:#aeb9ca;font-weight:600;margin-top:3px}
+    .shift-timeline{margin-top:14px;padding:12px 4px 2px}
+    .timeline-labels,.timeline-caption{display:flex;justify-content:space-between;color:var(--muted);font-size:.72rem;font-weight:700}
+    .timeline-track{height:9px;background:#e7ebf1;border-radius:99px;position:relative;margin:8px 4px}
+    .timeline-track>div{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#60a5fa,#2563eb);transition:width .4s ease}
+    .timeline-track>span{position:absolute;top:50%;left:0;width:15px;height:15px;border-radius:50%;background:#fff;border:3px solid var(--primary);transform:translate(-50%,-50%);box-shadow:0 1px 5px rgba(0,0,0,.15);transition:left .4s ease}
+    @media(max-width:430px){body{padding:10px}.grid,.grid2{grid-template-columns:1fr}.hero{padding:20px 17px}h1{font-size:1.45rem}.card{padding:15px}}
+  </style>
+
+<style>
+@media (min-width:900px){
+  body{
+    max-width:1400px!important;
+    padding:30px!important;
+    background:
+      radial-gradient(circle at 15% 10%,rgba(37,99,235,.08),transparent 32%),
+      radial-gradient(circle at 85% 15%,rgba(99,102,241,.06),transparent 30%),
+      linear-gradient(145deg,#e8edf5,#f8fafc 55%,#e9eef6)!important;
+  }
+  .pc-dashboard{
+    display:grid!important;
+    grid-template-columns:minmax(0,1.55fr) minmax(360px,.85fr)!important;
+    gap:22px!important;
+    align-items:start!important;
+  }
+  .pc-left,.pc-right{
+    min-width:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    gap:18px!important;
+  }
+  .pc-left .card,.pc-right .card{margin-bottom:0!important}
+
+  /* Centered title + clock panel */
+  .hero{
+    padding:28px 34px!important;
+    min-height:205px!important;
+    margin-bottom:22px!important;
+    text-align:center!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    border:1px solid rgba(255,255,255,.14)!important;
+    box-shadow:0 22px 45px rgba(15,23,42,.20),0 4px 10px rgba(15,23,42,.12),inset 0 1px 0 rgba(255,255,255,.10)!important;
+    background:radial-gradient(circle at 50% 0%,rgba(96,165,250,.16),transparent 45%),linear-gradient(135deg,#080f1c,#182844 58%,#0d1728)!important;
+  }
+  .hero h1,.hero p,.hero .live-datetime{padding-right:0!important;position:relative;z-index:2}
+  .hero h1{font-size:2rem!important;margin:7px 0 5px!important;text-shadow:0 3px 12px rgba(0,0,0,.28)}
+  .hero .live-datetime{justify-content:center!important}
+  .hero .round-clock{
+    position:relative!important;
+    right:auto!important;top:auto!important;transform:none!important;
+    order:-1!important;
+    width:132px!important;height:132px!important;
+    margin:0 0 10px!important;
+    background:radial-gradient(circle at 35% 25%,rgba(255,255,255,.13),transparent 32%),radial-gradient(circle,#17243a,#0a1220 72%)!important;
+    box-shadow:0 14px 28px rgba(0,0,0,.34),inset 0 2px 4px rgba(255,255,255,.13),inset 0 -8px 18px rgba(0,0,0,.35)!important;
+  }
+
+  /* Premium 3D cards */
+  .card{
+    border:1px solid rgba(203,213,225,.82)!important;
+    background:linear-gradient(145deg,#fff,#f8fafc)!important;
+    box-shadow:0 14px 28px rgba(15,23,42,.10),0 3px 7px rgba(15,23,42,.06),inset 0 1px 0 rgba(255,255,255,.85)!important;
+    transition:transform .18s ease,box-shadow .18s ease!important;
+  }
+  .card:hover{
+    transform:translateY(-2px)!important;
+    box-shadow:0 19px 34px rgba(15,23,42,.13),0 5px 10px rgba(15,23,42,.07),inset 0 1px 0 rgba(255,255,255,.9)!important;
+  }
+  .icon{
+    box-shadow:0 4px 8px rgba(37,99,235,.13),inset 0 1px 0 rgba(255,255,255,.85)!important;
+    border:1px solid rgba(191,219,254,.65)!important;
+  }
+  input{
+    box-shadow:inset 0 2px 5px rgba(15,23,42,.055),0 1px 0 rgba(255,255,255,.9)!important;
+    background:linear-gradient(180deg,#f7f9fc,#fff)!important;
+  }
+  input:focus{
+    transform:translateY(-1px);
+    box-shadow:0 5px 12px rgba(37,99,235,.10),0 0 0 4px rgba(37,99,235,.10)!important;
+  }
+  .calc-box,.progress-wrap,.result{
+    box-shadow:inset 0 1px 2px rgba(15,23,42,.035),0 2px 5px rgba(15,23,42,.035)!important;
+  }
+  button{
+    position:relative!important;
+    border:1px solid rgba(29,78,216,.35)!important;
+    box-shadow:0 7px 0 rgba(30,64,175,.28),0 11px 18px rgba(37,99,235,.18),inset 0 1px 0 rgba(255,255,255,.25)!important;
+    transition:transform .12s ease,box-shadow .12s ease,filter .12s ease!important;
+  }
+  button:hover{filter:brightness(1.04);transform:translateY(-1px)}
+  button:active{
+    transform:translateY(5px)!important;
+    box-shadow:0 2px 0 rgba(30,64,175,.28),0 5px 9px rgba(37,99,235,.13),inset 0 1px 0 rgba(255,255,255,.18)!important;
+  }
+  .countdown{
+    box-shadow:0 7px 16px rgba(11,18,32,.18),inset 0 1px 0 rgba(255,255,255,.08)!important;
+  }
+}
+</style>
+
+
+<style>
+@media (min-width:900px){
+  .container{max-width:1360px!important;margin:0 auto!important}
+  .hero{
+    width:100%!important;
+    margin:0 0 22px!important;
+    min-height:198px!important;
+    padding:24px 36px!important;
+    border-radius:26px!important;
+  }
+  .pc-dashboard{
+    width:100%!important;
+    grid-template-columns:minmax(0,1.55fr) minmax(360px,.85fr)!important;
+    gap:22px!important;
+    align-items:start!important;
+  }
+  .pc-left,.pc-right{
+    align-self:start!important;
+    gap:18px!important;
+  }
+
+  /* Make the hero feel like a single centered header, not another card in a column. */
+  .hero .eyebrow{letter-spacing:.16em}
+  .hero h1{margin-top:4px!important}
+  .hero .subtitle{max-width:720px!important}
+  .hero .live-datetime{margin-top:12px!important}
+
+  /* Balanced analog clock */
+  .hero .round-clock{
+    width:122px!important;height:122px!important;
+    margin-bottom:9px!important;
+  }
+
+  /* More consistent card geometry in the two segments */
+  .pc-left>.card:first-child,
+  .pc-right>.card:first-child{
+    margin-top:0!important;
+  }
+  .pc-left>.card,
+  .pc-right>.card{
+    border-radius:20px!important;
+  }
+
+  /* Give the right column a clean visual hierarchy without stretching its shorter content. */
+  .pc-right .current{
+    margin-top:0!important;
+  }
+
+  /* Results from shift-start calculation: visually emphasize the important final time. */
+  #shiftStartResult{
+    margin-top:12px!important;
+    border-color:#cfe0ff!important;
+    background:linear-gradient(145deg,#f8fbff,#edf4ff)!important;
+  }
+}
+</style>
+
+
+<style>
+@media (min-width:900px){
+  body{max-width:1400px!important;padding:28px 30px!important}
+  .container{max-width:1360px!important;width:100%!important;margin:0 auto!important}
+
+  .hero{
+    width:100%!important;
+    min-height:220px!important;
+    margin:0 0 22px!important;
+    padding:25px 36px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    text-align:center!important;
+    border-radius:26px!important;
+    box-shadow:0 20px 42px rgba(15,23,42,.18),0 4px 10px rgba(15,23,42,.10),inset 0 1px 0 rgba(255,255,255,.10)!important;
+  }
+  .hero h1,.hero p,.hero .live-datetime{padding-right:0!important}
+  .hero h1{margin:5px 0!important}
+  .hero .subtitle{max-width:760px!important}
+  .hero .live-datetime{justify-content:center!important;margin-top:11px!important}
+
+  .hero .round-clock{
+    position:relative!important;
+    inset:auto!important;
+    transform:none!important;
+    order:-1!important;
+    flex:0 0 auto!important;
+    width:126px!important;
+    height:126px!important;
+    margin:0 0 9px!important;
+  }
+
+  .pc-dashboard{
+    display:grid!important;
+    grid-template-columns:minmax(0,1.55fr) minmax(360px,.85fr)!important;
+    gap:22px!important;
+    align-items:start!important;
+    width:100%!important;
+  }
+  .pc-left,.pc-right{
+    display:flex!important;
+    flex-direction:column!important;
+    gap:18px!important;
+    min-width:0!important;
+    align-self:start!important;
+  }
+  .pc-left>.card:first-child,.pc-right>.card:first-child{margin-top:0!important}
+
+  .card{
+    background:linear-gradient(145deg,#fff 0%,#f8fafc 100%)!important;
+    border-color:rgba(203,213,225,.85)!important;
+    box-shadow:0 13px 27px rgba(15,23,42,.09),0 3px 7px rgba(15,23,42,.055),inset 0 1px 0 rgba(255,255,255,.9)!important;
+  }
+  .card:hover{transform:translateY(-1px)!important}
+
+  input{
+    background:linear-gradient(180deg,#f6f8fb,#fff)!important;
+    box-shadow:inset 0 2px 5px rgba(15,23,42,.055),0 1px 0 #fff!important;
+  }
+  button{
+    box-shadow:0 6px 0 rgba(30,64,175,.25),0 10px 17px rgba(37,99,235,.16),inset 0 1px 0 rgba(255,255,255,.24)!important;
+  }
+
+  #shiftStartResult{
+    margin-top:12px!important;
+    background:linear-gradient(145deg,#f8fbff,#edf4ff)!important;
+    border-color:#cfe0ff!important;
+  }
+}
+</style>
+
+
+</head>
+<body>
+<header class="hero">
+    <div class="eyebrow">Narzędzie produkcyjne</div>
+    <h1>⚙️ Kalkulator Zlecenia</h1>
+    <p class="subtitle">Szybkie obliczenie końca zlecenia i kontrola zmian A / B / C</p>
+    <div class="live-datetime">
+      <strong id="liveClock">--:--:--</strong>
+      <span id="liveDate">--</span>
+    </div>
+  
+    <div class="round-clock" id="roundClock" aria-label="Zegar analogowy">
+      <span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span>
+      <span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span>
+      <span class="tick"></span><span class="tick"></span><span class="tick"></span><span class="tick"></span>
+      <span class="clock-hand clock-hour" id="clockHour"></span>
+      <span class="clock-hand clock-minute" id="clockMinute"></span>
+      <span class="clock-hand clock-second" id="clockSecond"></span>
+      <span class="clock-center"></span>
+      <div class="time" id="roundClockTime">--:--:--</div>
+      <div class="date" id="roundClockDate">--.--.----</div>
+    </div>
+</header>
+  <div class="pc-dashboard">
+  <div class="pc-left">
+  
+
+  <section class="card">
+    <div class="card-title"><span class="icon">📏</span> Oblicz zakończenie zlecenia</div>
+    <div class="grid">
+      <div class="field">
+        <label for="totalMeters">Całkowite metry</label>
+        <input type="number" id="totalMeters" placeholder="np. 12000" inputmode="decimal">
+      </div>
+
+      <div class="field">
+        <label for="doneMeters">Wykonano do tej pory (m)</label>
+        <input type="number" id="doneMeters" placeholder="np. 500" inputmode="decimal">
+      </div>
+
+      <div class="field">
+        <label for="currentShiftDone">Wykonano na aktualnej zmianie (m)</label>
+        <input type="number" id="currentShiftDone" min="0" step="1" placeholder="np. 100" inputmode="decimal">
+      </div>
+
+      <div class="field">
+        <label for="speed">Prędkość (m/min)</label>
+        <input type="number" id="speed" placeholder="np. 35" inputmode="decimal">
+      </div>
+    </div>
+
+    <div class="calc-box" style="margin-top:4px;">
+      <div style="font-weight:800;margin-bottom:6px;">🕐 Początek aktualnej zmiany</div>
+      <div style="font-size:.82rem;color:var(--muted);margin-bottom:10px;">
+        Data i godzina są ustawiane automatycznie. Możesz je ręcznie zmienić.
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label for="shiftStartDate">Data początku zmiany</label>
+          <input type="date" id="shiftStartDate">
+        </div>
+        <div>
+          <label for="shiftStartTime">Godzina początku zmiany</label>
+          <input type="time" id="shiftStartTime">
+        </div>
+      </div>
+
+      <div id="shiftStartResult" class="result" style="display:none"></div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-head"><span>Postęp zlecenia</span><strong id="progressPercent">0%</strong></div>
+      <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
+      <div class="progress-meta"><span id="progressDone">0 m wykonane</span><span id="progressLeft">0 m pozostało</span></div>
+    </div>
+    <button onclick="calculateEndTime()">🚀 Oblicz zakończenie</button>
+    <div id="output" class="result" style="display:none"></div>
+    <div id="countdown" class="countdown" style="display:none"></div>
+  </section>
+
+  <section class="card">
+    <div class="card-title"><span class="icon">🛠️</span> Dodatkowe kalkulatory</div>
+
+    <div class="field">
+      <label for="targetEndTime">Chcę skończyć o</label>
+      <input type="datetime-local" id="targetEndTime">
+    </div>
+    <button type="button" onclick="calculateRequiredSpeed()">⚡ Oblicz wymaganą prędkość</button>
+    <div id="speedResult" class="result" style="display:none"></div>
+
+    <div style="height:10px"></div>
+
+    <div class="field">
+      <label for="newSpeed">Nowa prędkość (m/min)</label>
+      <input type="number" id="newSpeed" placeholder="np. 40" inputmode="decimal">
+    </div>
+    <button type="button" onclick="recalculateWithNewSpeed()">🔄 Przelicz z nową prędkością</button>
+    <div id="newSpeedResult" class="result" style="display:none"></div>
+
+    <button type="button" onclick="resetCalculator()" style="margin-top:12px;background:linear-gradient(135deg,#475569,#334155)">🧹 Nowe zlecenie</button>
+  </section>
+
+    </div>
+    <div class="pc-right">
+  <section class="card current" id="currentCard">
+    <div class="card-title"><span class="icon">🕐</span> Aktualna zmiana</div>
+    <div id="currentShift" class="result" style="margin-top:0"></div>
+    <div class="shift-timeline">
+      <div class="timeline-labels"><span id="shiftStartLabel">06:00</span><span id="shiftEndLabel">14:00</span></div>
+      <div class="timeline-track"><div id="shiftTimelineProgress"></div><span id="shiftTimelineDot"></span></div>
+      <div class="timeline-caption"><span id="shiftElapsed">Minęło 0%</span><span id="shiftRemaining">Pozostało 0%</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="card-title"><span class="icon">📅</span> Sprawdź obsadę na dzień</div>
+    <div class="field"><label for="checkDate">Wybierz datę</label><input type="date" id="checkDate"></div>
+    <button onclick="checkDayShift()">🔎 Sprawdź zmiany A / B / C</button>
+    <div id="shiftDayResult" class="result" style="display:none"></div>
+    <div class="hint">Układ zmian jest liczony według zapisanej rotacji.</div>
+  </section>
+  </div>
+</div>
+
+<script>
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {})); }
+
+function getWeekRotation(date) {
+  const monday = new Date(date);
+  const day = monday.getDay();
+  const offset = day === 0 ? -6 : 1 - day;
+  monday.setDate(monday.getDate() + offset);
+  const refDate = new Date("2025-06-16T00:00:00");
+  const weekDiff = Math.floor((monday - refDate) / (7 * 24 * 60 * 60 * 1000));
+  const pattern = ['A', 'B', 'C'];
+  const startIndex = ((weekDiff % 3) + 3) % 3;
+  return { rano: pattern[startIndex], popoludnie: pattern[(startIndex+1)%3], noc: pattern[(startIndex+2)%3] };
+}
+
+let calculatedEndTime = null;
+let countdownTimer = null;
+
+function updateProgress() {
+  const total = parseFloat(document.getElementById('totalMeters').value);
+  const done = parseFloat(document.getElementById('doneMeters').value);
+  const percent = !isFinite(total) || total <= 0 || !isFinite(done) ? 0 : Math.max(0, Math.min(100, (done / total) * 100));
+  const left = !isFinite(total) || !isFinite(done) ? 0 : Math.max(0, total - done);
+  document.getElementById('progressPercent').textContent = `${percent.toFixed(1).replace('.0','')}%`;
+  document.getElementById('progressBar').style.width = `${percent}%`;
+  document.getElementById('progressDone').textContent = `${Math.max(0, done || 0).toLocaleString('pl-PL')} m wykonane`;
+  document.getElementById('progressLeft').textContent = `${left.toLocaleString('pl-PL')} m pozostało`;
+}
+
+function startCountdown() {
+  clearInterval(countdownTimer);
+  const box = document.getElementById('countdown');
+  if (!calculatedEndTime) { box.style.display='none'; return; }
+  function tick() {
+    const diff = calculatedEndTime - new Date();
+    if (diff <= 0) {
+      box.innerHTML = `🏁 <strong>Zlecenie powinno być już zakończone</strong><small>Czas zakończenia został osiągnięty</small>`;
+      box.style.display='block'; clearInterval(countdownTimer); return;
+    }
+    const totalMin = Math.floor(diff / 60000);
+    const days = Math.floor(totalMin / 1440);
+    const hours = Math.floor((totalMin % 1440) / 60);
+    const mins = totalMin % 60;
+    const text = days ? `${days}d ${hours}h ${mins}min` : `${hours}h ${mins}min`;
+    box.innerHTML = `⏳ Pozostało do zakończenia: <strong>${text}</strong><small>Odliczanie aktualizuje się automatycznie</small>`;
+    box.style.display='block';
+  }
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+
+function calculateEndTime() {
+  const total = parseFloat(document.getElementById('totalMeters').value);
+  const done = parseFloat(document.getElementById('doneMeters').value);
+  const currentShiftDone = parseFloat(document.getElementById('currentShiftDone').value);
+  const speed = parseFloat(document.getElementById('speed').value);
+  const start = new Date(`${document.getElementById('shiftStartDate').value}T${document.getElementById('shiftStartTime').value}`);
+  const result = document.getElementById('output');
+
+  updateProgress();
+
+  if (!isFinite(total) || !isFinite(done) || !isFinite(currentShiftDone) ||
+      !isFinite(speed) || !isFinite(start.getTime()) || speed <= 0 ||
+      total <= 0 || done < 0 || currentShiftDone < 0 ||
+      currentShiftDone > done || total < done) {
+    result.innerHTML = '⚠️ Uzupełnij dane poprawnie. Metry aktualnej zmiany nie mogą być większe niż wykonane metry.';
+    result.style.display='block';
+    calculatedEndTime=null;
+    clearInterval(countdownTimer);
+    document.getElementById('countdown').style.display='none';
+    return;
+  }
+
+  // „Wykonano do tej pory” zawiera również produkcję bieżącej zmiany.
+  // Cofamy tę część, aby obliczyć stan zlecenia na początku zmiany.
+  const beforeShift = done - currentShiftDone;
+  const remainingFromShiftStart = total - beforeShift;
+  const minutesToEnd = remainingFromShiftStart / speed;
+
+  calculatedEndTime = new Date(start.getTime() + minutesToEnd * 60000);
+  const displayDate = new Date(calculatedEndTime);
+
+  const h = calculatedEndTime.getHours();
+  const shiftTime = h >= 6 && h < 14 ? 'rano' : h >= 14 && h < 22 ? 'popoludnie' : 'noc';
+  const rotation = getWeekRotation(calculatedEndTime);
+  const shift = rotation[shiftTime];
+  const names = {'A':'Zmiana A','B':'Zmiana B','C':'Zmiana C'};
+  const cssClass = shift==='A'?'shift-a':shift==='B'?'shift-b':'shift-c';
+
+  result.innerHTML = `<strong>📦 Pozostało na początku zmiany:</strong> ${Math.round(remainingFromShiftStart).toLocaleString('pl-PL')} m<br>
+    <strong>📏 Wykonano wcześniej:</strong> ${Math.round(beforeShift).toLocaleString('pl-PL')} m
+    <span style="opacity:.7;">(${Math.round(done)} − ${Math.round(currentShiftDone)})</span><br>
+    <strong>⏱️ Czas produkcji od początku zmiany:</strong> ${Math.round(minutesToEnd)} min<br>
+    <strong>🏁 Zakończenie:</strong> ${displayDate.toLocaleDateString('pl-PL')} ${calculatedEndTime.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'})}<br>
+    <strong>👷 Zlecenie zakończy:</strong> <span class="shift ${cssClass}">Zmiana ${shift}</span> <strong>${names[shift]}</strong>`;
+
+  result.style.display='block';
+  startCountdown();
+}
+
+function calculateRequiredSpeed() {
+  const total = parseFloat(document.getElementById('totalMeters').value);
+  const done = parseFloat(document.getElementById('doneMeters').value);
+  const target = new Date(document.getElementById('targetEndTime').value);
+  const result = document.getElementById('speedResult');
+
+  if (!isFinite(total) || !isFinite(done) || total <= 0 || done < 0 || total < done || !isFinite(target.getTime())) {
+    result.innerHTML = '⚠️ Najpierw uzupełnij poprawnie całkowite i wykonane metry oraz godzinę zakończenia.';
+    result.style.display = 'block';
+    return;
+  }
+
+  const left = total - done;
+  const minutes = (target - new Date()) / 60000;
+  if (minutes <= 0) {
+    result.innerHTML = '⚠️ Wybrana godzina zakończenia już minęła.';
+    result.style.display = 'block';
+    return;
+  }
+
+  const required = left / minutes;
+  result.innerHTML = `<strong>⚡ Wymagana prędkość:</strong> ${required.toFixed(1)} m/min<br>
+    <strong>📦 Pozostało:</strong> ${Math.round(left).toLocaleString('pl-PL')} m<br>
+    <strong>🏁 Cel:</strong> ${target.toLocaleDateString('pl-PL')} ${target.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'})}`;
+  result.style.display = 'block';
+}
+
+function recalculateWithNewSpeed() {
+  const total = parseFloat(document.getElementById('totalMeters').value);
+  const done = parseFloat(document.getElementById('doneMeters').value);
+  const speed = parseFloat(document.getElementById('newSpeed').value);
+  const result = document.getElementById('newSpeedResult');
+
+  if (!isFinite(total) || !isFinite(done) || !isFinite(speed) || total <= 0 || done < 0 || total < done || speed <= 0) {
+    result.innerHTML = '⚠️ Uzupełnij poprawnie metry i nową prędkość.';
+    result.style.display = 'block';
+    return;
+  }
+
+  const left = total - done;
+  const end = new Date(Date.now() + (left / speed) * 60000);
+  calculatedEndTime = end;
+
+  const h = end.getHours();
+  const shiftTime = h >= 6 && h < 14 ? 'rano' : h >= 14 && h < 22 ? 'popoludnie' : 'noc';
+  const rotation = getWeekRotation(end);
+  const shift = rotation[shiftTime];
+  const names = {'A':'Zmiana A','B':'Zmiana B','C':'Zmiana C'};
+  const cssClass = shift==='A'?'shift-a':shift==='B'?'shift-b':'shift-c';
+
+  result.innerHTML = `<strong>🏁 Nowe zakończenie:</strong> ${end.toLocaleDateString('pl-PL')} ${end.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'})}<br>
+    <strong>⏱️ Czas:</strong> ${Math.round(left/speed)} min<br>
+    <strong>👷 Zlecenie zakończy:</strong> <span class="shift ${cssClass}">Zmiana ${shift}</span> <strong>${names[shift]}</strong>`;
+  result.style.display = 'block';
+  startCountdown();
+}
+
+function resetCalculator() {
+  ['totalMeters','doneMeters','currentShiftDone','speed','targetEndTime','newSpeed'].forEach(id => document.getElementById(id).value = '');
+  ['output','speedResult','newSpeedResult','countdown'].forEach(id => document.getElementById(id).style.display = 'none');
+  calculatedEndTime = null;
+  clearInterval(countdownTimer);
+  setDefaultShiftStart();
+  updateProgress();
+}
+
+function getCurrentShift() {
+  const now=new Date(), hour=now.getHours(), minute=now.getMinutes(); let shiftTime='', shiftEnd=new Date(now), shiftStart=new Date(now);
+  if(hour>=6&&hour<14){shiftTime='rano';shiftStart.setHours(6,0,0,0);shiftEnd.setHours(14,0,0,0)}
+  else if(hour>=14&&hour<22){shiftTime='popoludnie';shiftStart.setHours(14,0,0,0);shiftEnd.setHours(22,0,0,0)}
+  else{shiftTime='noc';if(hour<6){shiftStart.setDate(shiftStart.getDate()-1);shiftStart.setHours(22,0,0,0);shiftEnd.setHours(6,0,0,0)}else{shiftStart.setHours(22,0,0,0);shiftEnd.setDate(shiftEnd.getDate()+1);shiftEnd.setHours(6,0,0,0)}}
+  const rotation=getWeekRotation(now), shift=rotation[shiftTime];
+  const names={'A':'Zmiana A','B':'Zmiana B','C':'Zmiana C'};
+  const msLeft=shiftEnd-now, minutes=Math.max(0,Math.floor(msLeft/60000)%60), hours=Math.max(0,Math.floor(msLeft/(60*60000)));
+  const total=shiftEnd-shiftStart, elapsed=Math.max(0,Math.min(total,now-shiftStart)), percent=total?elapsed/total*100:0;
+  const cssClass=shift==='A'?'shift-a':shift==='B'?'shift-b':'shift-c';
+  document.body.classList.remove('shift-a-theme','shift-b-theme','shift-c-theme');
+  document.body.classList.add(`shift-${shift.toLowerCase()}-theme`);
+  document.getElementById('currentShift').innerHTML =
+    `<span class="live"></span><span class="shift ${cssClass}">Zmiana ${shift}</span> <strong>${names[shift]}</strong><br>
+     <span style="color:var(--muted)">⏰ ${shiftTime} · do końca: <strong>${hours}h ${minutes}min</strong></span>`;
+  document.getElementById('shiftStartLabel').textContent=shiftStart.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('shiftEndLabel').textContent=shiftEnd.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('shiftTimelineProgress').style.width=`${percent}%`;
+  document.getElementById('shiftTimelineDot').style.left=`${percent}%`;
+  document.getElementById('shiftElapsed').textContent=`Minęło ${Math.round(percent)}%`;
+  document.getElementById('shiftRemaining').textContent=`Pozostało ${Math.round(100-percent)}%`;
+}
+
+function updateLiveDateTime(){
+  const now=new Date();
+  document.getElementById('liveClock').textContent=now.toLocaleTimeString('pl-PL',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('liveDate').textContent=now.toLocaleDateString('pl-PL',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+
+function checkDayShift(){
+  const input=document.getElementById('checkDate'), result=document.getElementById('shiftDayResult');
+  if(!input.value)return;
+  const selected=new Date(input.value), rotation=getWeekRotation(selected);
+  const names={'A':'Zmiana A','B':'Zmiana B','C':'Zmiana C'};
+  result.innerHTML=`<strong>📅 ${selected.toLocaleDateString('pl-PL')}</strong><br>
+    🌅 Rano — <span class="shift ${rotation.rano==='A'?'shift-a':rotation.rano==='B'?'shift-b':'shift-c'}">Zmiana ${rotation.rano}</span> ${names[rotation.rano]}<br>
+    🌇 Popołudnie — <span class="shift ${rotation.popoludnie==='A'?'shift-a':rotation.popoludnie==='B'?'shift-b':'shift-c'}">Zmiana ${rotation.popoludnie}</span> ${names[rotation.popoludnie]}<br>
+    🌙 Noc — <span class="shift ${rotation.noc==='A'?'shift-a':rotation.noc==='B'?'shift-b':'shift-c'}">Zmiana ${rotation.noc}</span> ${names[rotation.noc]}`;
+  result.style.display='block';
+}
+
+window.onload=()=>{
+  updateLiveDateTime();
+  setInterval(updateLiveDateTime,1000);
+  getCurrentShift();
+  setInterval(getCurrentShift,60000);
+  updateProgress();
+  ['totalMeters','doneMeters'].forEach(id => document.getElementById(id).addEventListener('input', updateProgress));
+  document.getElementById('checkDate').addEventListener('change', checkDayShift);
+};
+
+// ===== Liczenie od początku aktualnej zmiany =====
+function getShiftInfoForDateTime(dt) {
+  const d = new Date(dt);
+  const h = d.getHours();
+  let shift, person, start, end;
+
+  if (h >= 6 && h < 14) {
+    shift = "A"; person = "Zmiana A";
+    start = new Date(d); start.setHours(6,0,0,0);
+    end = new Date(d); end.setHours(14,0,0,0);
+  } else if (h >= 14 && h < 22) {
+    shift = "B"; person = "Zmiana B";
+    start = new Date(d); start.setHours(14,0,0,0);
+    end = new Date(d); end.setHours(22,0,0,0);
+  } else {
+    shift = "C"; person = "Zmiana C";
+    if (h < 6) {
+      // Nocna po północy należy do zmiany rozpoczętej poprzedniego dnia.
+      start = new Date(d); start.setDate(start.getDate()-1); start.setHours(22,0,0,0);
+      end = new Date(d); end.setHours(6,0,0,0);
+    } else {
+      start = new Date(d); start.setHours(22,0,0,0);
+      end = new Date(d); end.setDate(end.getDate()+1); end.setHours(6,0,0,0);
+    }
+  }
+  return {shift, person, start, end};
+}
+
+function setDefaultShiftStart() {
+  const info = getShiftInfoForDateTime(new Date());
+  const pad = n => String(n).padStart(2,"0");
+  const y = info.start.getFullYear();
+  const m = pad(info.start.getMonth()+1);
+  const day = pad(info.start.getDate());
+  document.getElementById("shiftStartDate").value = `${y}-${m}-${day}`;
+  document.getElementById("shiftStartTime").value =
+    `${pad(info.start.getHours())}:${pad(info.start.getMinutes())}`;
+  return info;
+}
+
+setDefaultShiftStart();
+
+
+
+</script>
+</div>
+<script>
+function updateRoundClock(){
+  const now=new Date();
+  const p=n=>String(n).padStart(2,"0");
+  const sec=now.getSeconds(), min=now.getMinutes(), hr=now.getHours()%12;
+  const t=`${p(now.getHours())}:${p(min)}:${p(sec)}`;
+  const d=`${p(now.getDate())}.${p(now.getMonth()+1)}.${now.getFullYear()}`;
+  const te=document.getElementById("roundClockTime");
+  const de=document.getElementById("roundClockDate");
+  const h=document.getElementById("clockHour");
+  const m=document.getElementById("clockMinute");
+  const s=document.getElementById("clockSecond");
+  if(te) te.textContent=t;
+  if(de) de.textContent=d;
+  if(h) h.style.transform=`translate(-50%,-100%) rotate(${hr*30 + min*.5}deg)`;
+  if(m) m.style.transform=`translate(-50%,-100%) rotate(${min*6 + sec*.1}deg)`;
+  if(s) s.style.transform=`translate(-50%,-100%) rotate(${sec*6}deg)`;
+}
+updateRoundClock();
+setInterval(updateRoundClock,1000);
+</script>
+
+
+</body>
+</html>
