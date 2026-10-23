@@ -219,6 +219,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,.station:focus,.se
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
+
+/* Przyciski usuwania własnych stacji */
+.station-row{display:flex;align-items:stretch;gap:8px;margin-top:8px}
+.station-row .station{flex:1;min-width:0;margin-top:0}
+.station-delete{flex:0 0 48px;width:48px;border:1px solid #63313d;border-radius:15px;background:#25131a;color:#ff8295;font-size:20px;font-weight:800;cursor:pointer}
+.station-delete:hover{background:#48202b;border-color:#ff8295}
+.station-delete:focus,.station-delete:focus-visible{outline:4px solid var(--tv-focus,#c8ff72)!important;outline-offset:4px;box-shadow:0 0 0 8px #c8ff7220,0 0 28px #c8ff7240!important;transform:scale(1.025);z-index:3}
+
 </style>
 
 <meta name="description" content="Moje Radio — słuchaj ulubionych stacji na telefonie i Android TV.">
@@ -320,8 +328,34 @@ let custom=storageJson("myRadioStations",[]);
 let stations=[...defaults,...custom],current=0,timerId=null;
 const a=document.getElementById("audio"),play=document.getElementById("play"),status=document.getElementById("status");
 function setBtn(s){const dot=status.querySelector(".status-dot");if(dot)dot.style.background=s==="playing"?"#b8ff65":s==="loading"?"#ffca65":"#777f92";if(s==="playing"){play.className="play playing";play.innerHTML='<span class="bars"><i></i><i></i><i></i></span>'}else if(s==="loading"){play.className="play loading";play.innerHTML="<span>⟳</span>"}else{play.className="play";play.innerHTML="<span>▶</span>"}}
-function render(){const box=document.getElementById("stations");box.innerHTML="";
-stations.forEach((s,i)=>{const b=document.createElement("button");b.className="station"+(i===current?" active":"");b.innerHTML='<span class="name">'+escapeHtml(s.name)+'</span><span class="url">'+escapeHtml(s.url)+'</span>';b.addEventListener("click",()=>selectStation(i));box.appendChild(b)})}
+function render(){
+ const box=document.getElementById("stations");
+ box.innerHTML="";
+ stations.forEach((s,i)=>{
+  const row=document.createElement("div");
+  row.className="station-row";
+  const b=document.createElement("button");
+  b.className="station"+(i===current?" active":"");
+  b.innerHTML='<span class="name">'+escapeHtml(s.name)+'</span><span class="url">'+escapeHtml(s.url)+'</span>';
+  b.addEventListener("click",()=>selectStation(i));
+  row.appendChild(b);
+  // Stacje domyślne są chronione — przycisk pojawia się tylko przy własnych.
+  if(i>=defaults.length){
+   const del=document.createElement("button");
+   del.type="button";
+   del.className="station-delete";
+   del.textContent="✕";
+   del.setAttribute("aria-label","Usuń stację "+s.name);
+   del.title="Usuń stację";
+   del.addEventListener("click",e=>{
+    e.stopPropagation();
+    removeCustomStation(i);
+   });
+   row.appendChild(del);
+  }
+  box.appendChild(row);
+ });
+}
 function escapeHtml(x){return x.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
 function updateCover(s){
  const c=document.getElementById("coverContent");
@@ -347,6 +381,32 @@ function stopRadio(){a.pause();a.removeAttribute("src");a.load();setBtn("idle");
 play.addEventListener("click",()=>a.paused?start():pause());document.getElementById("stop").addEventListener("click",stopRadio);
 document.getElementById("volume").addEventListener("input",e=>{a.volume=e.target.value;storageSet("myRadioVolume",e.target.value);document.getElementById("vol").textContent=Math.round(e.target.value*100)+"%"});
 let favoriteUrls=storageJson("myRadioFavorites",[]);
+
+function removeCustomStation(index){
+ if(index<defaults.length||index>=stations.length)return;
+ const removed=stations[index];
+ if(!confirm('Usunąć stację "'+removed.name+'"?'))return;
+ custom.splice(index-defaults.length,1);
+ storageSet("myRadioStations",JSON.stringify(custom));
+ favoriteUrls=favoriteUrls.filter(url=>url!==removed.url);
+ storageSet("myRadioFavorites",JSON.stringify(favoriteUrls));
+ const wasCurrent=index===current;
+ if(wasCurrent){
+  stopRadio();
+  storageRemove("myRadioLastUrl");
+  stations=[...defaults,...custom];
+  current=0;
+  selectStation(0);
+  renderFavorites();
+  return;
+ }
+ if(index<current)current--;
+ stations=[...defaults,...custom];
+ render();
+ renderFavorites();
+ updateFavoriteButton();
+}
+
 function renderFavorites(){
  const box=document.getElementById("favoritesList"); if(!box)return; box.innerHTML="";
  const items=stations.filter(s=>favoriteUrls.includes(s.url));
