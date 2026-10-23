@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090b12">
+<title>Moje Radio • Android TV</title>
+<style>
+:root{color-scheme:dark;--bg:#080a11;--panel:rgba(21,25,39,.82);--line:rgba(255,255,255,.09);--muted:#939bb0;--text:#f7f8ff;--accent:#b8ff65;--pink:#ff5478}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% -8%,rgba(112,82,255,.25),transparent 44%),radial-gradient(ellipse at 100% 45%,rgba(255,84,120,.08),transparent 35%);z-index:-1}
+button,input,select{font:inherit}
+button{cursor:pointer;transition:transform .18s ease,background .18s ease,border-color .18s ease}
+button:active{transform:scale(.98)}
+.wrap{position:relative;max-width:540px;margin:auto;min-height:100vh;padding:22px 17px 32px;background:linear-gradient(180deg,rgba(12,14,24,.36),rgba(8,10,17,.88))}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:3px 2px}
+.brand{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:900;letter-spacing:1.8px}
+.brand-dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 14px #b8ff6580}
+.brand-tag{font-size:9px;letter-spacing:1.2px;color:#8d96ac;border:1px solid #303449;border-radius:5px;padding:3px 5px}
+.status{display:flex;align-items:center;gap:6px;font-size:11px;color:#a9b0c3;background:#ffffff08;border:1px solid var(--line);padding:7px 10px;border-radius:30px;white-space:nowrap}
+.status-dot{width:6px;height:6px;background:#777f92;border-radius:50%;display:inline-block}
+.cover{position:relative;margin:30px auto 23px;width:min(70vw,286px);aspect-ratio:1;border-radius:34px;background:linear-gradient(145deg,#ff496b,#9e1d54 52%,#382b83);display:flex;align-items:center;justify-content:center;box-shadow:0 22px 65px #0009,0 0 0 1px #ffffff15;overflow:hidden}
+.cover:before,.cover:after{content:"";position:absolute;border:1px solid #ffffff25;border-radius:50%;width:76%;aspect-ratio:1}
+.cover:after{width:112%;border-color:#ffffff15}
+#coverContent{position:relative;z-index:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.logo{font-weight:1000;font-style:italic;font-size:clamp(48px,14vw,66px);letter-spacing:-5px;text-shadow:0 5px 18px #0003}
+.fm{font-size:28px;margin-left:5px;font-weight:800}
+.stationLogo{width:68%;height:68%;object-fit:contain;border-radius:25px;background:#fff;padding:15px;box-shadow:0 10px 30px #0003}
+.logoFallback{font-size:34px;font-weight:900;text-align:center;max-width:82%;line-height:1.05;text-shadow:0 3px 20px #0004}
+h1{text-align:center;font-size:27px;letter-spacing:-.8px;margin:0;font-weight:850}
+.sub{text-align:center;color:var(--muted);font-size:13px;margin:7px 0 22px}
+.play{display:flex;align-items:center;justify-content:center;margin:auto;width:82px;height:82px;border:0;border-radius:50%;background:var(--accent);color:#10150b;font-size:27px;position:relative;box-shadow:0 0 0 8px #b8ff6510,0 12px 35px #b8ff6525}
+.play:before{content:"";position:absolute;inset:-8px;border:1px solid #b8ff652d;border-radius:50%}
+.play.playing{animation:pulse 1.8s infinite}
+.play.loading{animation:loadpulse 1s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 8px #b8ff6510,0 12px 35px #b8ff6525}50%{box-shadow:0 0 0 15px #b8ff6500,0 12px 42px #b8ff6540}}
+@keyframes loadpulse{50%{transform:scale(1.05)}}
+.bars{display:inline-flex;gap:4px;height:24px;align-items:end}.bars i{width:4px;background:#10150b;border-radius:4px;animation:bars .8s infinite}.bars i:nth-child(1){height:9px}.bars i:nth-child(2){height:20px;animation-delay:.15s}.bars i:nth-child(3){height:14px;animation-delay:.3s}@keyframes bars{50%{transform:scaleY(.4)}}
+.controls{display:flex;justify-content:center;gap:10px;margin:20px 0 24px}
+.small{border:1px solid var(--line);background:#ffffff08;color:#e6e9f5;border-radius:14px;padding:11px 17px;font-size:13px;font-weight:650}
+.small:hover,.station:hover,.add:hover{background:#ffffff12;border-color:#ffffff25}
+.control-icon{margin-right:6px;color:var(--accent)}
+.card{background:linear-gradient(135deg,rgba(24,28,43,.9),rgba(16,19,30,.88));border:1px solid var(--line);border-radius:22px;padding:17px;margin-top:13px;box-shadow:0 12px 35px #00000012;backdrop-filter:blur(12px)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.label{font-weight:760;font-size:14px}
+.muted{color:var(--muted);font-size:12px}
+.volume-value{font-size:12px;font-weight:800;color:var(--accent);background:#b8ff6512;border-radius:8px;padding:5px 8px}
+input[type=range]{width:100%;accent-color:var(--accent);margin:15px 0 0;cursor:pointer}
+select,input[type=text]{background:#111522;color:#fff;border:1px solid #34394c;border-radius:12px;padding:10px 11px;font-size:13px;max-width:58%}
+select:focus,input[type=text]:focus{outline:1px solid var(--accent);border-color:var(--accent)}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.eyebrow{font-size:9px;font-weight:850;letter-spacing:1.7px;color:#858da3;margin-bottom:4px}
+.section-icon{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid var(--line);border-radius:12px;color:var(--accent);font-size:19px;background:#ffffff05}
+.small-icon{display:inline-flex;width:27px;height:27px;margin-right:7px;vertical-align:middle;font-size:14px}
+.station{width:100%;text-align:left;margin-top:8px;border:1px solid #2a3041;background:#111522;color:#fff;border-radius:15px;padding:13px 14px;position:relative}
+.station.active{border-color:#b8ff6570;background:linear-gradient(100deg,#b8ff6510,#ffffff05)}
+.station.active:before{content:"";position:absolute;left:0;top:13px;bottom:13px;width:3px;border-radius:0 4px 4px 0;background:var(--accent)}
+.station .name{font-weight:750;font-size:13px;display:block;padding-right:4px}
+.station .url{font-size:10px;color:#7e879c;display:block;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.add{width:100%;margin-top:10px;background:#b8ff650d;border:1px dashed #b8ff654a;color:var(--accent);border-radius:14px;padding:12px;font-size:13px;font-weight:750}
+.form{display:none;margin-top:12px}.form.show{display:block}.form input{width:100%;max-width:none}.form button{margin-top:8px;width:100%;background:var(--accent);color:#111;border:0;border-radius:12px;padding:12px;font-weight:850}
+.searchResult{width:100%;text-align:left;margin-top:8px;border:1px solid #2c3244;background:#111522;color:#fff;border-radius:14px;padding:11px;display:block}
+.searchResult:hover{border-color:#b8ff6570;background:#1a2030}
+.searchResult .meta{display:block;color:#929bb0;font-size:11px;margin-top:4px}
+.searchResult img{width:30px;height:30px;border-radius:8px;object-fit:cover;vertical-align:middle;margin-right:9px;background:white}
+.favorite-card{margin-top:13px}.favorite-card .muted{max-width:55%;text-align:right}
+.note{font-size:10px;color:#737d91;line-height:1.6;margin:12px 4px 0}
+.footer-note{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:26px 3px 8px;color:#727b90;font-size:10px;letter-spacing:.4px}
+.footer-equalizer{color:var(--accent);letter-spacing:2px;font-size:14px}
+.footer-version{font-size:8px;letter-spacing:1.3px;border:1px solid #292e40;border-radius:5px;padding:4px 6px}
+@media(min-width:480px){.wrap{padding-left:22px;padding-right:22px}.cover{margin-top:34px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+
+.transport{display:flex;align-items:center;justify-content:center;gap:23px}
+.skip{width:43px;height:43px;border-radius:50%;border:1px solid var(--line);background:#ffffff08;color:#e8ebf6;font-size:30px;line-height:1;display:flex;align-items:center;justify-content:center}
+.skip:hover{background:#ffffff13;border-color:#b8ff6545;color:var(--accent)}
+.fav-station{width:100%;display:flex;align-items:center;gap:11px;text-align:left;margin-top:8px;border:1px solid #2a3041;background:#111522;color:#fff;border-radius:14px;padding:11px 12px}
+.fav-station:hover{border-color:#b8ff6570;background:#1a2030}
+.fav-star{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#b8ff6512;color:var(--accent);font-size:16px;flex-shrink:0}
+.fav-name{font-size:13px;font-weight:750;display:block}
+.fav-sub{font-size:10px;color:#858ea3;display:block;margin-top:3px}
+
+
+.track-meta{display:flex;align-items:center;justify-content:center;gap:9px;margin:-10px auto 19px;color:#858ea3;font-size:10px;letter-spacing:.25px;min-height:18px}
+.live-pill{display:inline-flex;align-items:center;gap:5px;border:1px solid #ff54782e;background:#ff54780d;color:#ff7893;border-radius:5px;padding:3px 5px;font-size:8px;font-weight:900;letter-spacing:1px}
+.live-pill span{width:5px;height:5px;border-radius:50%;background:#ff5478;box-shadow:0 0 8px #ff5478}
+
+
+.stationLogo{image-rendering:auto;max-width:100%;max-height:100%;filter:drop-shadow(0 10px 20px #0002)}
+.crispLogo{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;width:100%;height:100%;padding:24px;background:radial-gradient(circle at 50% 35%,#ffffff1b,transparent 45%)}
+.logoMark{display:flex;align-items:center;justify-content:center;width:112px;height:112px;border-radius:32px;background:linear-gradient(145deg,#c4ff78,#77d83e);color:#111a0b;font-size:48px;font-weight:1000;letter-spacing:-3px;box-shadow:0 15px 35px #0003, inset 0 1px 0 #ffffff8c}
+.logoText{font-size:clamp(15px,4.5vw,23px);font-weight:900;letter-spacing:1.4px;text-transform:uppercase;text-align:center;text-shadow:0 3px 16px #0005}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.recognition 
+
+.recognize-alt:hover{text-decoration:underline}
+
+.brandLogo{position:relative;width:82%;height:64%;display:flex;align-items:center;justify-content:center;flex-direction:column;line-height:1;filter:drop-shadow(0 10px 20px #0003)}
+.voxLogo{color:#fff;transform:skew(-7deg)}
+.vox-word{font-size:clamp(62px,17vw,94px);font-weight:1000;letter-spacing:-7px;text-shadow:3px 4px 0 #26213d}
+.vox-fm{font-size:clamp(25px,7vw,38px);font-weight:950;letter-spacing:9px;margin-left:10px;margin-top:-2px;color:#c8ff78}
+.vox-line{height:5px;width:78%;border-radius:9px;background:linear-gradient(90deg,#c8ff78,#fff,#ff507a);margin-top:13px}
+.zetLogo{color:#fff}
+.zet-disc{width:190px;height:190px;max-width:70vw;max-height:70vw;aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ed1c35;border:7px solid #fff;font-size:clamp(44px,13vw,68px);font-weight:1000;letter-spacing:-3px;box-shadow:0 0 0 4px #ed1c35}
+.zet-caption{font-size:12px;font-weight:900;letter-spacing:5px;margin-top:16px}
+.eskaLogo{align-items:stretch;color:#fff;transform:skew(-7deg)}
+.eska-word{font-size:clamp(47px,13vw,75px);font-weight:1000;letter-spacing:-3px;text-shadow:4px 4px 0 #c91c35}
+.rock-word{align-self:flex-end;background:#e21e35;color:#fff;font-size:clamp(28px,8vw,43px);font-weight:1000;letter-spacing:3px;padding:7px 12px;margin-top:-1px}
+.eska-slash{height:5px;background:#fff;width:100%;margin-top:12px}
+.tokLogo{color:#fff;flex-direction:row;gap:7px;flex-wrap:wrap}
+.tok-word{font-size:clamp(57px,16vw,90px);font-weight:1000;letter-spacing:-5px}
+.tok-fm{font-size:clamp(30px,8vw,45px);font-weight:950;color:#ff4155;align-self:center}
+.tok-caption{width:100%;text-align:center;font-size:12px;font-weight:900;letter-spacing:7px;margin-top:12px}
+.customLogo{gap:13px;color:#fff}
+.custom-mark{width:100px;height:100px;display:flex;align-items:center;justify-content:center;border-radius:28px;background:linear-gradient(145deg,#c4ff78,#77d83e);color:#10150b;font-size:42px;font-weight:1000;letter-spacing:-2px;box-shadow:0 15px 35px #0003}
+.custom-name{font-size:clamp(16px,4.8vw,24px);font-weight:900;letter-spacing:1px;text-align:center}
+.custom-caption{font-size:10px;color:#e7e9f1;letter-spacing:4px;font-weight:800}
+
+
+/* Android TV layout and remote-control support */
+:root{--tv-focus:#c8ff72;--tv-panel:rgba(13,18,31,.88)}
+html{scroll-behavior:smooth}
+body{min-height:100vh;overflow-x:hidden;background:#070b12}
+body:before{content:"";position:fixed;inset:0;z-index:-3;pointer-events:none;background:var(--scene-bg,radial-gradient(ellipse at 75% 15%,#263a56 0,transparent 45%),linear-gradient(135deg,#111b2b,#080b13 65%));transition:background 1s ease}
+body:after{content:var(--scene-emoji,"");position:fixed;right:4vw;top:8vh;z-index:-2;pointer-events:none;font-size:clamp(100px,18vw,250px);opacity:.12;filter:blur(.2px);transform:rotate(-8deg)}
+.wrap{max-width:none;min-height:100vh;padding:22px clamp(18px,3vw,54px) 20px;background:linear-gradient(90deg,rgba(4,7,13,.2),rgba(4,7,13,.06) 55%,rgba(4,7,13,.24))}
+.top{max-width:1800px;margin:0 auto 18px;padding:0 4px}
+.brand{font-size:clamp(15px,1.25vw,21px);letter-spacing:2px}
+.brand-tag{font-size:10px}
+.status{font-size:13px;padding:9px 14px}
+.tv-layout{max-width:1800px;margin:0 auto;display:grid;grid-template-columns:minmax(340px, .86fr) minmax(520px,1.45fr);gap:clamp(20px,2.4vw,42px);align-items:start}
+.left-panel,.player-panel{min-width:0}
+.left-panel{display:flex;flex-direction:column;gap:14px}
+.tv-card,.card{margin:0;background:var(--tv-panel);border:1px solid rgba(255,255,255,.11);border-radius:22px;padding:clamp(16px,1.5vw,25px);box-shadow:0 18px 45px #0003;backdrop-filter:blur(15px)}
+.section-head{margin-bottom:13px}
+.eyebrow{font-size:11px;letter-spacing:2px}
+.label{font-size:clamp(16px,1.15vw,20px)}
+.section-icon{width:42px;height:42px;font-size:21px}
+.small-icon{width:34px;height:34px;font-size:17px}
+.station{padding:clamp(14px,1.1vw,19px);margin-top:9px;border-radius:15px;min-height:62px}
+.station .name{font-size:clamp(15px,1.1vw,19px)}
+.station .url{font-size:11px}
+.station.active{background:linear-gradient(100deg,#b8ff651c,#ffffff08)}
+.add,.searchResult{min-height:52px;font-size:clamp(14px,1vw,17px)}
+.form input,select,input[type=text]{font-size:16px;min-height:48px}
+.form button{min-height:52px;font-size:16px}
+.player-panel{display:flex;flex-direction:column;gap:14px}
+.player-hero{position:relative;overflow:hidden;text-align:center;border-radius:28px;padding:clamp(20px,2.3vw,38px);background:linear-gradient(140deg,rgba(20,26,42,.86),rgba(10,13,22,.9));border:1px solid rgba(255,255,255,.12);box-shadow:0 22px 60px #0004}
+.player-hero:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 15%,rgba(184,255,101,.11),transparent 55%)}
+.player-hero>*{position:relative}
+.cover{margin:8px auto 22px;width:min(29vw,34vh,350px);min-width:210px;max-width:350px;border-radius:34px}
+#stationName{font-size:clamp(30px,3.1vw,48px);margin-top:0}
+.sub{font-size:clamp(16px,1.3vw,21px);margin:10px 0 20px;min-height:1.4em}
+.track-meta{font-size:clamp(11px,.8vw,13px);margin:0 auto 22px;flex-wrap:wrap}
+.transport{gap:clamp(22px,3vw,46px)}
+.skip{width:clamp(54px,4.6vw,70px);height:clamp(54px,4.6vw,70px);font-size:42px}
+.play{width:clamp(88px,7vw,112px);height:clamp(88px,7vw,112px);font-size:32px}
+.controls{margin:22px 0 0;gap:14px}
+.small{padding:13px 20px;font-size:clamp(14px,1vw,17px);min-height:48px}
+.player-tools{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+input[type=range]{height:30px;margin-top:16px}
+#timer{max-width:60%;font-size:15px}
+.weather-card{position:relative;overflow:hidden;min-height:120px;background:linear-gradient(130deg,rgba(39,57,80,.86),rgba(17,24,39,.9))}
+.weather-main{display:flex;align-items:center;gap:16px}
+.weather-symbol{font-size:clamp(36px,3vw,50px);width:58px;text-align:center;filter:drop-shadow(0 5px 12px #0004)}
+.weather-temp{font-size:clamp(30px,2.5vw,40px);font-weight:850;letter-spacing:-1px}
+.weather-desc{font-size:clamp(13px,1vw,16px);color:#d1d8e8;margin-top:3px}
+.weather-details{display:flex;flex-wrap:wrap;gap:8px 14px;margin-top:14px;color:#b7c2d5;font-size:12px}
+.weather-details span{white-space:nowrap}
+.weather-place{font-size:11px;color:#b9c8df;letter-spacing:1.5px;font-weight:850}
+.weather-foot{font-size:10px;color:#a5b2c8;margin-top:10px}
+.tv-clock{font-variant-numeric:tabular-nums;font-size:clamp(16px,1.3vw,22px);font-weight:800;color:#e5eaf5}
+.footer-note{max-width:1800px;margin:18px auto 0;font-size:11px}
+.note{max-width:1800px;margin:8px auto 0;font-size:11px}
+button,input,select,[tabindex]{outline:none}
+button:focus-visible,input:focus-visible,select:focus-visible,.station:focus,.searchResult:focus,.fav-station:focus,.small:focus,.play:focus,.skip:focus,.add:focus{outline:4px solid var(--tv-focus)!important;outline-offset:4px;box-shadow:0 0 0 8px #c8ff7220,0 0 28px #c8ff7240!important;transform:scale(1.025);z-index:3}
+.station:focus .name,.searchResult:focus strong,.small:focus{color:#e2ffb6}
+.weather-snow{--scene-bg:radial-gradient(ellipse at 75% 12%,#c5e6ff48,transparent 38%),linear-gradient(145deg,#182f4b,#0b111f 65%);--scene-emoji:"❄️"}
+.weather-rain{--scene-bg:radial-gradient(ellipse at 75% 12%,#6f8cae3d,transparent 42%),linear-gradient(145deg,#1a293a,#080d17 70%);--scene-emoji:"🌧️"}
+.weather-sun{--scene-bg:radial-gradient(ellipse at 75% 10%,#ffd76a44,transparent 38%),linear-gradient(145deg,#263b4c,#101827 65%);--scene-emoji:"☀️"}
+.weather-cloud{--scene-bg:radial-gradient(ellipse at 75% 12%,#a8bad52b,transparent 42%),linear-gradient(145deg,#202d40,#090e18 70%);--scene-emoji:"☁️"}
+.season-spring{--scene-bg:radial-gradient(ellipse at 75% 12%,#8bd58d30,transparent 40%),linear-gradient(145deg,#1c352e,#09130f 70%)}
+.season-summer{--scene-bg:radial-gradient(ellipse at 75% 12%,#ffce7b36,transparent 40%),linear-gradient(145deg,#3a2e29,#10131b 70%)}
+.season-autumn{--scene-bg:radial-gradient(ellipse at 75% 12%,#e37c4338,transparent 40%),linear-gradient(145deg,#3b2927,#11111a 70%)}
+.season-winter{--scene-bg:radial-gradient(ellipse at 75% 12%,#9fc9ff30,transparent 40%),linear-gradient(145deg,#1c2d43,#090d17 70%)}
+.holiday-halloween{--scene-bg:radial-gradient(ellipse at 78% 15%,#ff6a1638,transparent 42%),linear-gradient(145deg,#29152f,#090910 72%);--scene-emoji:"🎃"}
+.holiday-christmas{--scene-bg:radial-gradient(ellipse at 78% 15%,#d82d4930,transparent 42%),linear-gradient(145deg,#12342b,#08120f 72%);--scene-emoji:"🎄"}
+.holiday-easter{--scene-bg:radial-gradient(ellipse at 78% 15%,#c4a5ff28,transparent 42%),linear-gradient(145deg,#26352c,#0b1112 72%);--scene-emoji:"🌷"}
+@media(max-width:950px){
+ .tv-layout{grid-template-columns:minmax(260px,.85fr) minmax(350px,1.15fr);gap:16px}
+ .wrap{padding:15px}
+ .cover{min-width:170px}
+ .player-tools{grid-template-columns:1fr}
+}
+@media(max-width:680px){
+ .tv-layout{grid-template-columns:1fr}
+ .left-panel{order:2}
+ .player-panel{order:1}
+ .cover{width:min(58vw,250px);min-width:0}
+ .player-hero{padding:18px}
+ .top{margin-bottom:12px}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+</style>
+
+<meta name="description" content="Moje Radio — słuchaj ulubionych stacji na telefonie i Android TV.">
+<meta name="theme-color" content="#090b12">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icons/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+
+</head>
+<body class="season-autumn">
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="brand-dot"></span> MOJE RADIO <span class="brand-tag">ANDROID TV</span></div>
+    <div style="display:flex;align-items:center;gap:14px"><span id="tvClock" class="tv-clock">--:--</span><div id="status" class="status"><span class="status-dot"></span> Gotowe</div></div>
+  </header>
+
+  <div class="tv-layout">
+    <aside class="left-panel">
+      <section class="tv-card weather-card" id="weatherCard" aria-label="Pogoda w Libiążu">
+        <div class="row" style="margin-bottom:14px">
+          <div><div class="weather-place">POGODA • LIBIĄŻ</div><div id="weatherUpdated" class="weather-foot">Pobieranie aktualnych danych…</div></div>
+          <span id="weatherEmoji" class="weather-symbol">🌤️</span>
+        </div>
+        <div class="weather-main">
+          <div id="weatherTemp" class="weather-temp">--°</div>
+          <div><div id="weatherDesc" class="weather-desc">Sprawdzam pogodę…</div><div id="weatherFeels" class="muted" style="margin-top:5px">Odczuwalna: --°</div></div>
+        </div>
+        <div class="weather-details"><span id="weatherWind">Wiatr: --</span><span id="weatherHumidity">Wilgotność: --</span><span id="weatherDay">Dziś</span></div>
+      </section>
+
+      <section class="tv-card">
+        <div class="section-head"><div><div class="eyebrow">TWOJA KOLEKCJA</div><div class="label">Stacje radiowe</div></div><span class="section-icon">♫</span></div>
+        <div id="stations"></div>
+        <button class="add" id="addBtn">＋ Dodaj własną stację</button>
+        <div class="form" id="form">
+          <input id="newName" type="text" placeholder="Nazwa stacji" aria-label="Nazwa nowej stacji">
+          <input id="newUrl" type="text" placeholder="Adres strumienia audio" aria-label="Adres strumienia" style="margin-top:8px">
+          <button id="saveBtn">Zapisz stację</button>
+        </div>
+      </section>
+
+      <section class="tv-card">
+        <div class="section-head"><div><div class="eyebrow">ODKRYWAJ MUZYKĘ</div><div class="label">Wyszukaj stację</div></div><span class="section-icon">⌕</span></div>
+        <input id="search" type="text" placeholder="Nazwa, gatunek, miasto…" aria-label="Szukaj stacji" style="margin-top:4px;width:100%;max-width:none">
+        <div id="searchResults"></div>
+        <div id="searchStatus" class="muted" style="margin-top:8px"></div>
+      </section>
+
+      <section class="tv-card">
+        <div class="row"><span class="label"><span class="section-icon small-icon">♡</span> Ulubione</span><span id="favState" class="muted">Brak zapisanej stacji</span></div>
+        <div id="favoritesList"></div>
+      </section>
+    </aside>
+
+    <main class="player-panel">
+      <section class="player-hero">
+        <div class="eyebrow">TERAZ ODTWARZASZ</div>
+        <div class="cover" id="cover"><div id="coverContent"><span class="logo">VOX</span><span class="fm">FM</span></div></div>
+        <h1 id="stationName">VOX FM</h1>
+        <div id="track" class="sub">W rytmie hitów</div>
+        <div id="trackMeta" class="track-meta"><span class="live-pill"><span></span> LIVE</span><span id="trackDetail">Tytuł pojawi się, jeśli stacja udostępnia metadane</span></div>
+        <div class="transport">
+          <button class="skip" id="prevStation" aria-label="Poprzednia stacja" title="Poprzednia stacja">‹</button>
+          <button class="play" id="play" aria-label="Odtwarzaj lub pauza" title="Odtwarzaj / pauza"><span>▶</span></button>
+          <button class="skip" id="nextStation" aria-label="Następna stacja" title="Następna stacja">›</button>
+        </div>
+        <div class="controls"><button class="small" id="stop"><span class="control-icon">■</span> Stop</button><button class="small" id="favorite"><span class="control-icon">♡</span> Ulubione</button></div>
+      </section>
+
+      <div class="player-tools">
+        <section class="card">
+          <div class="row"><span class="label"><span class="section-icon small-icon">♫</span> Głośność</span><span id="vol" class="volume-value">100%</span></div>
+          <input id="volume" type="range" min="0" max="1" step=".01" value="1" aria-label="Głośność">
+        </section>
+        <section class="card">
+          <div class="row"><span class="label"><span class="section-icon small-icon">◷</span> Wyłącznik czasowy</span><select id="timer" aria-label="Wyłącznik czasowy"><option value="0">Wyłączony</option><option value="30">30 min</option><option value="60">60 min</option><option value="90">90 min</option><option value="120">120 min</option></select></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="footer-note"><span class="footer-equalizer">▂ ▅ ▃ ▆</span><span>Twoja muzyka. Twój klimat.</span><span class="footer-version">ANDROID TV</span></div>
+  <p class="note">Obsługa pilotem: strzałki wybierają element, OK uruchamia. Tytuły utworów zależą od danych udostępnianych przez stację i ograniczeń przeglądarki.</p>
+  <audio id="audio" preload="none"></audio>
+</div>
+<script>
+const defaults=[
+{name:"VOX FM",url:"https://ic2.smcdn.pl/3140-1.mp3",favicon:"https://www.voxfm.pl/favicon.ico",desc:"VOX FM"},
+{name:"Radio ZET",url:"https://25703.live.streamtheworld.com/RADIO_ZET.mp3?dist=radiogarden&ppid=none&gdpr=0&gdpr_consent=none",favicon:"https://www.radiozet.pl/favicon.ico",desc:"Radio ZET"},
+{name:"ESKA ROCK",url:"https://ic2.smcdn.pl/5380-1.mp3",favicon:"https://www.eskarock.pl/favicon.ico",desc:"ESKA ROCK"},
+{name:"TOK FM",url:"https://radiostream.pl/tuba10-1.mp3",favicon:"https://www.tokfm.pl/favicon.ico",desc:"TOK FM"}
+];
+// Bezpieczna pamięć: niektóre przeglądarki TV blokują localStorage dla plików file://.
+function storageGet(key){try{return window.localStorage.getItem(key)}catch(e){return null}}
+function storageSet(key,value){try{window.localStorage.setItem(key,value);return true}catch(e){return false}}
+function storageRemove(key){try{window.localStorage.removeItem(key)}catch(e){}}
+function storageJson(key,fallback){try{const value=storageGet(key);return value===null?fallback:JSON.parse(value)}catch(e){return fallback}}
+let custom=storageJson("myRadioStations",[]);
+let stations=[...defaults,...custom],current=0,timerId=null;
+const a=document.getElementById("audio"),play=document.getElementById("play"),status=document.getElementById("status");
+function setBtn(s){const dot=status.querySelector(".status-dot");if(dot)dot.style.background=s==="playing"?"#b8ff65":s==="loading"?"#ffca65":"#777f92";if(s==="playing"){play.className="play playing";play.innerHTML='<span class="bars"><i></i><i></i><i></i></span>'}else if(s==="loading"){play.className="play loading";play.innerHTML="<span>⟳</span>"}else{play.className="play";play.innerHTML="<span>▶</span>"}}
+function render(){const box=document.getElementById("stations");box.innerHTML="";
+stations.forEach((s,i)=>{const b=document.createElement("button");b.className="station"+(i===current?" active":"");b.innerHTML='<span class="name">'+escapeHtml(s.name)+'</span><span class="url">'+escapeHtml(s.url)+'</span>';b.addEventListener("click",()=>selectStation(i));box.appendChild(b)})}
+function escapeHtml(x){return x.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function updateCover(s){
+ const c=document.getElementById("coverContent");
+ const name=(s.name||"Radio").toUpperCase();
+ const logos={
+  "VOX FM":'<div class="brandLogo voxLogo"><span class="vox-word">VOX</span><span class="vox-fm">FM</span><span class="vox-line"></span></div>',
+  "RADIO ZET":'<div class="brandLogo zetLogo"><span class="zet-disc">ZET</span><span class="zet-caption">RADIO</span></div>',
+  "ESKA ROCK":'<div class="brandLogo eskaLogo"><span class="eska-word">ESKA</span><span class="rock-word">ROCK</span><span class="eska-slash"></span></div>',
+  "TOK FM":'<div class="brandLogo tokLogo"><span class="tok-word">TOK</span><span class="tok-fm">FM</span><span class="tok-caption">RADIO</span></div>'
+ };
+ if(logos[name]){c.innerHTML=logos[name];return;}
+ c.innerHTML='<div class="brandLogo customLogo"><span class="custom-mark">'+escapeHtml(name.slice(0,3))+'</span><span class="custom-name">'+escapeHtml(s.name)+'</span><span class="custom-caption">RADIO ONLINE</span></div>';
+}
+function selectStation(i){
+ current=i; storageSet("myRadioLastUrl",stations[i].url); const s=stations[i];
+ document.getElementById("stationName").textContent=s.name;
+ document.getElementById("track").textContent="Radio internetowe";
+ updateCover(s); render(); updateFavoriteButton(); setTrackDetail("Ładowanie informacji o stacji…"); scheduleTrackInfo(); if(!a.paused)start();
+}
+async function start(){const s=stations[current];setBtn("loading");status.textContent="Łączenie…";setTrackDetail("Łączenie ze stacją…");scheduleTrackInfo();a.src=s.url;a.load();try{await a.play();setBtn("playing");status.textContent="● Gra"}catch(e){setBtn("idle");status.textContent="Nie można odtworzyć";setTrackDetail("Brak połączenia ze strumieniem")}}
+function pause(){a.pause();setBtn("idle");status.textContent="Pauza"}
+function stopRadio(){a.pause();a.removeAttribute("src");a.load();setBtn("idle");status.textContent="Zatrzymane"}
+play.addEventListener("click",()=>a.paused?start():pause());document.getElementById("stop").addEventListener("click",stopRadio);
+document.getElementById("volume").addEventListener("input",e=>{a.volume=e.target.value;storageSet("myRadioVolume",e.target.value);document.getElementById("vol").textContent=Math.round(e.target.value*100)+"%"});
+let favoriteUrls=storageJson("myRadioFavorites",[]);
+function renderFavorites(){
+ const box=document.getElementById("favoritesList"); if(!box)return; box.innerHTML="";
+ const items=stations.filter(s=>favoriteUrls.includes(s.url));
+ if(!items.length){box.innerHTML='<div class="muted">Dodaj stację do ulubionych przyciskiem ♡ poniżej odtwarzacza.</div>';return}
+ items.forEach(s=>{
+  const b=document.createElement("button");b.className="fav-station";
+  b.innerHTML='<span class="fav-star">★</span><span><span class="fav-name">'+escapeHtml(s.name)+'</span><span class="fav-sub">Dotknij, aby odtworzyć</span></span>';
+  b.addEventListener("click",()=>{const i=stations.findIndex(x=>x.url===s.url);if(i>=0){selectStation(i);start()}});
+  box.appendChild(b);
+ });
+}
+function updateFavoriteButton(){
+ const s=stations[current],isFav=favoriteUrls.includes(s.url);
+ document.getElementById("favorite").innerHTML=isFav?'<span class="control-icon">★</span> W ulubionych':'<span class="control-icon">♡</span> Ulubione';
+ document.getElementById("favState").textContent=isFav?s.name+" ★":"Brak zapisanej stacji";
+}
+document.getElementById("favorite").addEventListener("click",()=>{
+ const url=stations[current].url;
+ if(favoriteUrls.includes(url))favoriteUrls=favoriteUrls.filter(x=>x!==url);else favoriteUrls.push(url);
+ storageSet("myRadioFavorites",JSON.stringify(favoriteUrls));renderFavorites();updateFavoriteButton();
+});
+document.getElementById("timer").addEventListener("change",e=>{if(timerId)clearTimeout(timerId);let m=+e.target.value;if(m)timerId=setTimeout(()=>{stopRadio();e.target.value=0},m*60000)});
+document.getElementById("addBtn").addEventListener("click",()=>document.getElementById("form").classList.toggle("show"));
+document.getElementById("saveBtn").addEventListener("click",()=>{const name=document.getElementById("newName").value.trim(),url=document.getElementById("newUrl").value.trim();if(!name||!url){alert("Podaj nazwę i adres streamu.");return}custom.push({name,url});storageSet("myRadioStations",JSON.stringify(custom));stations=[...defaults,...custom];current=stations.length-1;document.getElementById("newName").value="";document.getElementById("newUrl").value="";document.getElementById("form").classList.remove("show");selectStation(current)});
+a.addEventListener("playing",()=>{setBtn("playing");status.textContent="● Gra"});a.addEventListener("waiting",()=>{if(!a.paused){setBtn("loading");status.textContent="Buforowanie…"}});a.addEventListener("error",()=>{setBtn("idle");status.textContent="Błąd streamu"});
+
+const searchInput=document.getElementById("search"),searchResults=document.getElementById("searchResults"),searchStatus=document.getElementById("searchStatus");
+let searchTimer=null;
+
+// Automatyczne wykrywanie metadanych: próbujemy typowych endpointów Icecast/SHOUTcast.
+// Pojedynczy plik HTML nie może ominąć blokad CORS; jeśli serwer je stosuje, odczyt będzie niemożliwy.
+let trackPoll=null, trackRequestId=0;
+function setTrackDetail(text){
+ const el=document.getElementById("trackDetail");
+ if(el)el.textContent=text;
+}
+function normalizeTrackTitle(value){
+ if(typeof value!=="string")return "";
+ return value.replace(/^\s*(?:StreamTitle\s*=\s*)/i,"").replace(/^['"]|['"];?$/g,"").trim();
+}
+function getIcecastSources(json){
+ const sources=json&&json.icestats&&json.icestats.source;
+ if(!sources)return [];
+ return Array.isArray(sources)?sources:[sources];
+}
+function titleFromSource(source){
+ if(!source||typeof source!=="object")return "";
+ const direct=normalizeTrackTitle(source.title||source.stream_title||source.nowplaying||"");
+ if(direct)return direct;
+ const artist=normalizeTrackTitle(source.artist||"");
+ const song=normalizeTrackTitle(source.song||"");
+ if(artist&&song)return artist+" — "+song;
+ return "";
+}
+function metadataEndpoints(streamUrl){
+ const u=new URL(streamUrl);
+ const origin=u.origin, path=u.pathname;
+ const list=[
+  origin+"/status-json.xsl",
+  origin+"/status-json.xsl?mount="+encodeURIComponent(path),
+  origin+"/stats?json=1",
+  origin+"/currentsong?sid=1",
+  origin+"/played.html?sid=1&json=1"
+ ];
+ // Część serwerów SHOUTcast obsługuje endpointy tylko dla konkretnego identyfikatora strumienia.
+ const sid=u.searchParams.get("sid")||"1";
+ list.push(origin+"/currentsong?sid="+encodeURIComponent(sid));
+ return [...new Set(list)];
+}
+async function tryReadMetadata(endpoint, streamUrl){
+ const controller=new AbortController();
+ const timeout=setTimeout(()=>controller.abort(),3500);
+ try{
+  const r=await fetch(endpoint,{cache:"no-store",signal:controller.signal,headers:{"Accept":"application/json,text/plain,text/html,*/*"}});
+  if(!r.ok)return "";
+  const text=await r.text();
+  const contentType=(r.headers.get("content-type")||"").toLowerCase();
+  if(contentType.includes("json")||text.trim().startsWith("{")){
+   let data;try{data=JSON.parse(text)}catch(e){return ""}
+   const sources=getIcecastSources(data);
+   const streamPath=new URL(streamUrl).pathname;
+   const source=sources.find(x=>String(x.listenurl||x.listen_url||"").includes(streamPath)||String(x.mount||"")===streamPath)||sources[0];
+   const title=titleFromSource(source);
+   if(title)return title;
+   const direct=titleFromSource(data);
+   if(direct)return direct;
+   if(data.currentSong||data.currentsong||data.song||data.title)
+    return normalizeTrackTitle(data.currentSong||data.currentsong||data.song||data.title);
+   return "";
+  }
+  // SHOUTcast /currentsong commonly returns the current title as plain text.
+  if(endpoint.includes("/currentsong")){
+   const title=normalizeTrackTitle(text);
+   if(title && !/^(?:error|not found|404|<html)/i.test(title))return title;
+  }
+  // Legacy SHOUTcast /7.html contains comma-separated server information, not consistently the song title.
+  return "";
+ }catch(e){return ""}finally{clearTimeout(timeout)}
+}
+async function refreshTrackInfo(){
+ const requestId=++trackRequestId;
+ const s=stations[current]; if(!s)return;
+ setTrackDetail("Sprawdzam informacje o utworze…");
+ let endpoints=[];
+ try{endpoints=metadataEndpoints(s.url)}catch(e){}
+ for(const endpoint of endpoints){
+  if(requestId!==trackRequestId)return;
+  const title=await tryReadMetadata(endpoint,s.url);
+  if(title){
+   if(requestId!==trackRequestId)return;
+   document.getElementById("track").textContent=title;
+   setTrackDetail("Tytuł odczytany automatycznie ze źródła stacji");
+   return;
+  }
+ }
+ if(requestId!==trackRequestId)return;
+ document.getElementById("track").textContent="Radio internetowe";
+ setTrackDetail("Stacja nie udostępnia tytułu albo blokuje odczyt w przeglądarce");
+}
+function scheduleTrackInfo(){
+ if(trackPoll)clearInterval(trackPoll);
+ trackRequestId++;
+ refreshTrackInfo();
+ trackPoll=setInterval(refreshTrackInfo,30000);
+}
+
+async function searchStations(q){
+  if(!q.trim()){searchResults.innerHTML="";searchStatus.textContent="";return}
+  searchStatus.textContent="Szukam…";searchResults.innerHTML="";
+  try{
+    const url="https://de1.api.radio-browser.info/json/stations/search?"+new URLSearchParams({name:q.trim(),countrycode:"PL",hidebroken:"true",order:"clickcount",reverse:"true",limit:"12"});
+    const r=await fetch(url); const data=await r.json();
+    searchStatus.textContent=data.length?("Znaleziono: "+data.length):"Brak wyników";
+    data.forEach(s=>{
+      const b=document.createElement("button"); b.className="searchResult";
+      const bitrate=s.bitrate?s.bitrate+" kbps":"stream";
+      b.innerHTML=(s.favicon?'<img src="'+escapeHtml(s.favicon)+'" alt="">':"")+"<strong>"+escapeHtml(s.name||"Bez nazwy")+"</strong><span class='meta'>"+escapeHtml(s.country||"")+" · "+bitrate+"</span>";
+      b.addEventListener("click",()=>addFoundStation(s)); searchResults.appendChild(b);
+    });
+  }catch(e){searchStatus.textContent="Nie udało się pobrać wyników."}
+}
+function addFoundStation(s){
+  const url=s.url_resolved||s.url;
+  if(!url){status.textContent="Brak adresu streamu";return}
+  if(!custom.some(x=>x.url===url)) custom.push({name:s.name,url,favicon:s.favicon||"",desc:"Radio Browser"});
+  storageSet("myRadioStations",JSON.stringify(custom));stations=[...defaults,...custom];
+  current=stations.length-1;selectStation(current);renderFavorites();searchInput.value="";searchResults.innerHTML="";searchStatus.textContent="Dodano: "+s.name;
+}
+searchInput.addEventListener("input",()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>searchStations(searchInput.value),350)});
+
+a.volume=Number(document.getElementById("volume").value);// Zapamiętaj ostatnią stację i poziom głośności.
+const savedVolume=storageGet("myRadioVolume");
+if(savedVolume!==null){document.getElementById("volume").value=savedVolume;a.volume=Number(savedVolume);document.getElementById("vol").textContent=Math.round(Number(savedVolume)*100)+"%";}
+const savedUrl=storageGet("myRadioLastUrl");
+if(savedUrl){const savedIndex=stations.findIndex(s=>s.url===savedUrl);if(savedIndex>=0)current=savedIndex;}
+if(stations[current]){document.getElementById("stationName").textContent=stations[current].name;updateCover(stations[current]);}
+document.getElementById("prevStation").addEventListener("click",()=>{selectStation((current-1+stations.length)%stations.length);start()});
+document.getElementById("nextStation").addEventListener("click",()=>{selectStation((current+1)%stations.length);start()});
+render();renderFavorites();updateFavoriteButton();scheduleTrackInfo();
+
+
+// Pogoda dla Libiąża z Open-Meteo — działa bez klucza API, o ile internet i CORS są dostępne.
+const weatherCodes={
+  0:["Bezchmurnie","☀️","sun"],1:["Przeważnie pogodnie","🌤️","sun"],2:["Częściowe zachmurzenie","⛅","cloud"],3:["Pochmurno","☁️","cloud"],
+  45:["Mgła","🌫️","cloud"],48:["Mgła osadzająca szadź","🌫️","cloud"],51:["Lekka mżawka","🌦️","rain"],53:["Mżawka","🌦️","rain"],55:["Silna mżawka","🌧️","rain"],
+  56:["Marznąca mżawka","🌧️","rain"],57:["Silna marznąca mżawka","🌧️","rain"],61:["Lekki deszcz","🌦️","rain"],63:["Deszcz","🌧️","rain"],65:["Silny deszcz","🌧️","rain"],
+  66:["Marznący deszcz","🌧️","rain"],67:["Silny marznący deszcz","🌧️","rain"],71:["Lekki śnieg","🌨️","snow"],73:["Śnieg","❄️","snow"],75:["Silny śnieg","❄️","snow"],
+  77:["Śnieg ziarnisty","🌨️","snow"],80:["Przelotne opady","🌦️","rain"],81:["Przelotny deszcz","🌧️","rain"],82:["Ulewa","🌧️","rain"],
+  85:["Przelotny śnieg","🌨️","snow"],86:["Silny śnieg","❄️","snow"],95:["Burza","⛈️","rain"],96:["Burza z gradem","⛈️","rain"],99:["Silna burza z gradem","⛈️","rain"]
+};
+function applyScene(code){
+ const body=document.body,now=new Date(),m=now.getMonth()+1,d=now.getDate();
+ body.classList.remove("weather-snow","weather-rain","weather-sun","weather-cloud","season-spring","season-summer","season-autumn","season-winter","holiday-halloween","holiday-christmas","holiday-easter");
+ if(m===10&&d>=25&&d<=31)body.classList.add("holiday-halloween");
+ else if((m===12&&d>=1)||(m===1&&d<=6))body.classList.add("holiday-christmas");
+ else if(m>=3&&m<=4&&d>=1&&d<=7)body.classList.add("holiday-easter");
+ else if([3,4,5].includes(m))body.classList.add("season-spring");
+ else if([6,7,8].includes(m))body.classList.add("season-summer");
+ else if([9,10,11].includes(m))body.classList.add("season-autumn");
+ else body.classList.add("season-winter");
+ if(code!==null&&code!==undefined){
+  const info=weatherCodes[code]||["Pogoda","🌤️","cloud"];
+  body.classList.add("weather-"+info[2]);
+  document.getElementById("weatherEmoji").textContent=info[1];
+ }
+}
+async function loadWeather(){
+ try{
+  const url="https://api.open-meteo.com/v1/forecast?latitude=50.103&longitude=19.315&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=Europe%2FWarsaw&forecast_days=1";
+  const response=await fetch(url,{cache:"no-store"});
+  if(!response.ok)throw new Error("weather");
+  const data=await response.json(),c=data.current,daily=data.daily;
+  const info=weatherCodes[c.weather_code]||["Pogoda","🌤️","cloud"];
+  document.getElementById("weatherTemp").textContent=Math.round(c.temperature_2m)+"°";
+  document.getElementById("weatherDesc").textContent=info[0];
+  document.getElementById("weatherFeels").textContent="Odczuwalna: "+Math.round(c.apparent_temperature)+"°";
+  document.getElementById("weatherWind").textContent="Wiatr: "+Math.round(c.wind_speed_10m)+" km/h";
+  document.getElementById("weatherHumidity").textContent="Wilgotność: "+Math.round(c.relative_humidity_2m)+"%";
+  document.getElementById("weatherDay").textContent="Dziś "+Math.round(daily.temperature_2m_min[0])+"° / "+Math.round(daily.temperature_2m_max[0])+"°";
+  document.getElementById("weatherUpdated").textContent="Aktualizacja: "+new Date(c.time).toLocaleTimeString("pl-PL",{hour:"2-digit",minute:"2-digit"});
+  document.getElementById("weatherEmoji").textContent=info[1];
+  applyScene(c.weather_code);
+ }catch(e){
+  document.getElementById("weatherDesc").textContent="Brak danych pogodowych";
+  document.getElementById("weatherUpdated").textContent="Sprawdź połączenie z internetem";
+  applyScene(null);
+ }
+}
+function updateClock(){document.getElementById("tvClock").textContent=new Date().toLocaleTimeString("pl-PL",{hour:"2-digit",minute:"2-digit"})}
+updateClock();setInterval(updateClock,15000);loadWeather();setInterval(loadWeather,15*60*1000);
+
+// Pilot TV: strzałki przenoszą fokus do najbliższego widocznego elementu w danym kierunku.
+function isFocusable(el){
+ return el && el.matches('button:not(:disabled),input:not(:disabled),select:not(:disabled),a[href],[tabindex]:not([tabindex="-1"])') &&
+ el.getClientRects().length>0 && getComputedStyle(el).visibility!=="hidden";
+}
+document.addEventListener("keydown",e=>{
+ if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)){
+  const active=document.activeElement;
+  if(active && (active.tagName==="INPUT"||active.tagName==="SELECT") && (e.key==="ArrowLeft"||e.key==="ArrowRight") && active.type==="range")return;
+  const all=[...document.querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),a[href]')].filter(isFocusable);
+  if(!all.length)return;
+  const origin=active&&isFocusable(active)?active:all[0];
+  const a=origin.getBoundingClientRect(),ax=a.left+a.width/2,ay=a.top+a.height/2;
+  let candidates=all.filter(el=>el!==origin).map(el=>{
+   const r=el.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,dx=x-ax,dy=y-ay;
+   let primary=0,secondary=0;
+   if(e.key==="ArrowRight"){if(dx<=4)return null;primary=dx;secondary=Math.abs(dy)}
+   if(e.key==="ArrowLeft"){if(dx>=-4)return null;primary=-dx;secondary=Math.abs(dy)}
+   if(e.key==="ArrowDown"){if(dy<=4)return null;primary=dy;secondary=Math.abs(dx)}
+   if(e.key==="ArrowUp"){if(dy>=-4)return null;primary=-dy;secondary=Math.abs(dx)}
+   return {el,score:primary+secondary*1.8};
+  }).filter(Boolean).sort((x,y)=>x.score-y.score);
+  if(candidates.length){e.preventDefault();candidates[0].el.focus({preventScroll:true});candidates[0].el.scrollIntoView({block:"nearest",inline:"nearest",behavior:"smooth"})}
+ }else if(e.key==="Escape"||e.key==="Backspace"){
+  const form=document.getElementById("form");
+  if(form.classList.contains("show") && document.activeElement!==document.getElementById("search")){
+   form.classList.remove("show");document.getElementById("addBtn").focus();e.preventDefault();
+  }
+ }
+});
+
+</script>
+
+<script>
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(err => console.warn("PWA offline cache:", err));
+  });
+}
+</script>
+
+</body>
+</html>
